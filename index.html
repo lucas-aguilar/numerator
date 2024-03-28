@@ -39,13 +39,15 @@
       <div class="row">
         <div class="col-12">
           <section class="name-input p-3">
-            <input type="text" id="nameInput" onkeyup="onNameChange()" placeholder="Digite o nome aqui" />
+            <input type="text" id="nameInput" onkeyup="onNameChange(event)" placeholder="Digite o nome aqui" />
           </section>
         </div>
       </div>
       <div class="row">
         <section id="nameLetters" class="col-12">
-          <!-- <div class="row">
+          <!-- 
+            this is the structure of the 'generateLetterHtml()' function output:
+            <div class="row">
             <div class="letter-wrapper col-12">
               <div class="row">
                 <div class="vowel col-4"></div>
@@ -96,7 +98,7 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
     <script async defer>
-      const onNameChange = () => {
+      const onNameChange = (event) => {
         const input = document.getElementById("nameInput");
         const name = input.value;
         let vowelTotal = 0;
@@ -104,8 +106,10 @@
         let output = '<div class="row">';
         for (let i = 0; i < name.length; i++) {
           const letter = name.charAt(i);
-          output += generateLetterHtml(letter);
-          if (isVowel(letter)) {
+          const before = i > 0 ? name.charAt(i - 1) : "";
+          const after = i < name.length - 1 ? name.charAt(i + 1) : "";
+          output += generateLetterHtml(letter, before, after);
+          if (isVowel(letter, before, after)) {
             vowelTotal += equivalences[letter] ? equivalences[letter] : 0;
           } else {
             consonantTotal += equivalences[letter] ? equivalences[letter] : 0;
@@ -119,23 +123,39 @@
         const consonantTotalDiv = document.getElementById("consonantTotal");
         consonantTotalDiv.innerHTML = consonantTotal;
       };
-      const isVowel = (letter) => {
-        return letter === "a" || letter === "e" || letter === "i" || letter === "o" || letter === "u" || letter === "A" || letter === "E" || letter === "I" || letter === "O" || letter === "U";
+
+      const isVowel = (letter, before = "", after = "") => {
+        const isSimpleVowel = (letter) => {
+          return letter === "a" || letter === "e" || letter === "i" || letter === "o" || letter === "u" || letter === "A" || letter === "E" || letter === "I" || letter === "O" || letter === "U";
+        };
+
+        if (letter === "y" || letter === "Y") {
+          if (!before && !after) return true;
+          if (before && isSimpleVowel(before)) {
+            return false;
+          }
+          if (after && isSimpleVowel(after)) {
+            return false;
+          }
+          return true;
+        }
+        return isSimpleVowel(letter);
       };
-      const generateLetterHtml = (letter) => {
+
+      const generateLetterHtml = (letter, before = "", after = "") => {
         let output = "";
         output +=
           ' <div class="letter-wrapper col-12">\
               <div class="row">\
           ';
 
-        if (isVowel(letter)) {
+        if (isVowel(letter, before, after)) {
           output += `<div class="vowel col-4">${equivalences[letter] ? equivalences[letter] : ""}</div>`;
         } else {
           output += '<div class="vowel col-4"></div>';
         }
         output += `<div class="letter col-4">${letter}</div>`;
-        if (isVowel(letter)) {
+        if (isVowel(letter, before, after)) {
           output += '<div class="consonant col-4"></div>';
         } else {
           output += `<div class="consonant col-4">${equivalences[letter] ? equivalences[letter] : ""}</div>`;
@@ -144,6 +164,7 @@
         output += "</div>";
         return output;
       };
+
       // "hashmap" object of letters values:
       const equivalences = {
         A: 1,
